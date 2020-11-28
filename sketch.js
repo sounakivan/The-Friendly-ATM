@@ -1,43 +1,54 @@
-let handpose;
 let video;
-let predictions = [];
-let keypoint;
+let poseNet;
+let poses = [];
+
 let cx, cy;
 let r = 20;
 
 let selections = [];
 let responses = [];
 
+let speechRec;
 let speechInput;
 
 function setup() {
     createCanvas(720, 540);
-    let speechRec = new p5.SpeechRec('en-US', gotSpeech);
+    video = createCapture(VIDEO);
+    video.hide();
     
+    let options = {
+        flipHorizontal: true
+    }
+    
+    poseNet = ml5.poseNet(video, options, modelReady);
+    
+    poseNet.on('pose', (results) => {
+        poses = results;
+    });
+
+    speechRec = new p5.SpeechRec('en-US', gotSpeech);
     let continuous = true;
     let interim = false;
     speechRec.start(continuous, interim);
     
-    function gotSpeech() {
+}
+
+function gotSpeech() {
         speechInput = speechRec.resultString;
         console.log(speechInput);
     }
-    
-    video = createCapture(VIDEO);
-    video.size(width, height);
-    
-    options = {
-        flipHorizontal: true
+
+function drawCursor() {
+    if (poses.length > 0) {
+        //console.log(poses);
+        let mouthPos = poses[0].pose.nose;
+        //console.log(mouthPos);
+        cx = mouthPos.x;
+        cy = mouthPos.y;
+        noStroke();    
+        fill(0, 255, 0, 126);
+        ellipse(cx, cy, r, r);
     }
-    
-    handpose = ml5.handpose(video, options, modelReady);
-
-    handpose.on("predict", results => {
-        //console.log(results);
-        predictions = results;
-    });
-
-    video.hide();
 }
 
 function modelReady() {
@@ -50,37 +61,37 @@ function draw() {
     image(video, width/2-120, 360, 240, 180);
     
     let initResponse = new Response('Want cash?', width/2, 150, genOptions);
+    initResponse.write();
     initResponse.runFunc();
     
+    let speechBox = new Selection('speak here', width/2, height/2 + 50);
+    speechBox.view();
+    
     drawCursor();
+    
+    if (speechInput === 'yes') {
+        enterPin();
+    }
 }
 
 let genOptions = function() {
     //generate selections
-    selections.push(new Selection('No', width/2, height/2));
-    selections.push(new Selection('Yes', width/2 - 200, height/2));
-    selections.push(new Selection('Maybe', width/2 + 200, height/2));
+    selections.push(new Selection('No', width/2, height/2-50));
+    selections.push(new Selection('Yes', width/2 - 200, height/2-50));
+    selections.push(new Selection('Maybe', width/2 + 200, height/2-50));
     
     for (let i = 0; i < selections.length; i++) {
         selections[i].view();
+        selections[i].select();
     }
 }
 
-function drawCursor() {
-    for (let i = 0; i < predictions.length; i += 1) {
-    const prediction = predictions[i];
-        for (let j = 0; j < prediction.landmarks.length; j += 1) {
-            //keypoint1 = prediction.landmarks[5];
-            keypoint = prediction.landmarks[8];
-            cx = keypoint[0];
-            cy = keypoint[1];
-            //console.log(keypoint);
-            
-            fill(0, 255, 0, 126);
-            noStroke();
-            ellipse(cx, cy, r, r);
-    }
-  }
+function enterPin() {
+    fill(220);
+    rect(width/2, 100, width, 300);
+    fill(0);
+    textSize(50);
+    text('Enter your PIN', width/2, 150);
 }
 
 class Selection {
@@ -96,7 +107,7 @@ class Selection {
     view() {
         rectMode(CENTER);
         //detect hover
-        if (handpose.modelReady) {
+        if (poses) {
             if (cx > this.xPos - 50 && cx < this.xPos + 50 && cy > this.yPos - 20 && cy < this.yPos + 20) {
                 noFill();
                 stroke(0,0,255)
@@ -116,7 +127,10 @@ class Selection {
     }
     
     select() {
-        if (this.isSelected === true) {
+        //console.log(this.optionText);
+        //console.log(speechInput);
+        if (this.optionText === speechInput) {
+            console.log('speech is an option')
             this.runFunc();
         }
     }
@@ -135,6 +149,6 @@ class Response {
         textSize(50);
         fill(0);
         text(this.responseText, this.xPos, this.yPos);
-        this.runFunc();
+        //this.runFunc();
     }
 }
