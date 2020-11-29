@@ -5,8 +5,8 @@ let poses = [];
 let cx, cy;
 let r = 20;
 
-let selections = [];
-let responses = [];
+let options = [];
+let screens = [];
 
 let speechRec;
 let speechInput;
@@ -31,6 +31,7 @@ function setup() {
     let interim = false;
     speechRec.start(continuous, interim);
     
+    
 }
 
 function gotSpeech() {
@@ -38,7 +39,12 @@ function gotSpeech() {
         console.log(speechInput);
     }
 
+function modelReady() {
+    console.log("Model ready!");
+}
+
 function drawCursor() {
+    
     if (poses.length > 0) {
         //console.log(poses);
         let mouthPos = poses[0].pose.nose;
@@ -50,61 +56,78 @@ function drawCursor() {
         ellipse(cx, cy, r, r);
     }
 }
-
-function modelReady() {
-  console.log("Model ready!");
-}
     
 function draw() {
     background(220);
-    
     image(video, width/2-120, 360, 240, 180);
     
-    let initResponse = new Response('Want cash?', width/2, 150, genOptions);
-    initResponse.write();
-    initResponse.runFunc();
     
-    let speechBox = new Selection('speak here', width/2, height/2 + 50);
-    speechBox.view();
+    ATM_start();
     
     drawCursor();
-    
-    if (speechInput === 'yes') {
-        enterPin();
-    }
 }
 
-let genOptions = function() {
+function resetInstances() {
+    //reset all instances
+    options.length = 0;
+    screens[0] = null;
+}
+
+//ATM RESPONSE FUNCTIONS
+
+function ATM_start() {
+    screens.push(new ScreenState('Want Cash?', width/2, 150, wantCash));
+    screens[0].display();
+}
+
+let enterPin = function() {
+    screens.push(new ScreenState('Enter your PIN', width/2, 150))
+}
+
+//USER SELECTION FUNCTIONS
+
+let wantCash = function() {
     //generate selections
-    selections.push(new Selection('No', width/2, height/2-50));
-    selections.push(new Selection('Yes', width/2 - 200, height/2-50));
-    selections.push(new Selection('Maybe', width/2 + 200, height/2-50));
+    options.push(new UserSelection('Yes', width/2 - 200, height/2-50, enterPin));
+    options.push(new UserSelection('No', width/2, height/2-50));
+    options.push(new UserSelection('Maybe', width/2 + 200, height/2-50));
     
-    for (let i = 0; i < selections.length; i++) {
-        selections[i].view();
-        selections[i].select();
+    for (let i = 0; i < options.length; i++) {
+        options[i].display();
+        options[i].detectSelect();
     }
 }
 
-function enterPin() {
-    fill(220);
-    rect(width/2, 100, width, 300);
-    fill(0);
-    textSize(50);
-    text('Enter your PIN', width/2, 150);
+class ScreenState {
+    constructor(screenText, xPos, yPos, genOptions) {
+        this.screenText = screenText;
+        this.xPos = xPos;
+        this.yPos = yPos;
+        this.genOptions = genOptions;
+        this.isState = false;
+    }
+    
+    display() {
+        textSize(50);
+        fill(0);
+        text(this.screenText, this.xPos, this.yPos);
+        this.genOptions();
+    }
 }
 
-class Selection {
-    constructor(optionText, xPos, yPos, runFunc) {
+//CLASSES
+
+class UserSelection {
+    constructor(optionText, xPos, yPos, onSelect) {
         this.optionText = optionText;
         this.xPos = xPos;
         this.yPos = yPos;
-        this.runFunc = runFunc;
+        this.onSelect = onSelect;
         this.isActive = false;
         this.isSelected = false;
     }
     
-    view() {
+    display() {
         rectMode(CENTER);
         //detect hover
         if (poses) {
@@ -126,29 +149,10 @@ class Selection {
         text(this.optionText, this.xPos, this.yPos, 100, 40);
     }
     
-    select() {
-        //console.log(this.optionText);
-        //console.log(speechInput);
-        if (this.optionText === speechInput) {
-            console.log('speech is an option')
-            this.runFunc();
+    detectSelect() {
+        let lowercaseInput = this.optionText.toLowerCase();
+        if (lowercaseInput === speechInput) {
+            this.onSelect();
         }
-    }
-}
-
-class Response {
-    constructor(responseText, xPos, yPos, runFunc) {
-        this.responseText = responseText;
-        this.xPos = xPos;
-        this.yPos = yPos;
-        this.runFunc = runFunc;
-        this.isState = false;
-    }
-    
-    write() {
-        textSize(50);
-        fill(0);
-        text(this.responseText, this.xPos, this.yPos);
-        //this.runFunc();
     }
 }
