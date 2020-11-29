@@ -5,11 +5,12 @@ let poses = [];
 let cx, cy;
 let r = 20;
 
-let options = [];
-let screens = [];
-
 let speechRec;
 let speechInput;
+
+let ATMsays;
+let options = [];
+let currentOptions;
 
 function setup() {
     createCanvas(720, 540);
@@ -31,7 +32,9 @@ function setup() {
     let interim = false;
     speechRec.start(continuous, interim);
     
-    
+    ATMsays = 'Want Cash?'
+    currentOptions = wantCash;
+
 }
 
 function gotSpeech() {
@@ -50,7 +53,7 @@ function drawCursor() {
         let mouthPos = poses[0].pose.nose;
         //console.log(mouthPos);
         cx = mouthPos.x;
-        cy = mouthPos.y;
+        cy = mouthPos.y + 50;
         noStroke();    
         fill(0, 255, 0, 126);
         ellipse(cx, cy, r, r);
@@ -59,29 +62,28 @@ function drawCursor() {
     
 function draw() {
     background(220);
-    image(video, width/2-120, 360, 240, 180);
+    //image(video, width/2-120, 360, 240, 180);
     
-    
-    ATM_start();
+    let thisScreen = new ScreenState(ATMsays, width/2, 150, currentOptions);
+    thisScreen.display();
+
+    //ATM_start();
+    //console.log(ATMsays);
+    //console.log(newOptions);
     
     drawCursor();
 }
 
-function resetInstances() {
-    //reset all instances
-    options.length = 0;
-    screens[0] = null;
-}
-
 //ATM RESPONSE FUNCTIONS
 
-function ATM_start() {
-    screens.push(new ScreenState('Want Cash?', width/2, 150, wantCash));
-    screens[0].display();
+let enterPin = function() {
+    ATMsays = 'Enter your PIN'
+    currentOptions = pinPad;
 }
 
-let enterPin = function() {
-    screens.push(new ScreenState('Enter your PIN', width/2, 150))
+let whyNot = function() {
+    ATMsays = 'Why not?'
+    currentOptions = whyNotOpts;
 }
 
 //USER SELECTION FUNCTIONS
@@ -89,13 +91,21 @@ let enterPin = function() {
 let wantCash = function() {
     //generate selections
     options.push(new UserSelection('Yes', width/2 - 200, height/2-50, enterPin));
-    options.push(new UserSelection('No', width/2, height/2-50));
-    options.push(new UserSelection('Maybe', width/2 + 200, height/2-50));
+    options.push(new UserSelection('No', width/2, height/2-50, whyNot));
+    options.push(new UserSelection('Maybe', width/2 + 200, height/2-50, whyNot));
     
     for (let i = 0; i < options.length; i++) {
         options[i].display();
         options[i].detectSelect();
     }
+}
+
+let pinPad = function() {
+    //console.log('pin is 8787');
+}
+
+let whyNotOps = function() {
+    
 }
 
 class ScreenState {
