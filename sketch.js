@@ -11,9 +11,18 @@ let speechInput;
 let ATMsays;
 let options = [];
 let currentOptions;
+let ATMstart = false;
+
+let openingView;
+let myFont;
+
+function preload() {
+    openingView = loadImage('assets/opening view.png');
+    myFont = loadFont('assets/PressStart2P-Regular.ttf');
+}
 
 function setup() {
-    createCanvas(720, 540);
+    createCanvas(800, 500);
     video = createCapture(VIDEO);
     video.hide();
     
@@ -64,14 +73,67 @@ function draw() {
     background(220);
     //image(video, width/2-120, 360, 240, 180);
     
+    if (ATMstart === false) {
+        openingScreen();
+    } else {
+        showATMscreen();
+        drawCursor();
+    }
+    
+}
+
+function openingScreen() {
+    image(openingView, 0, 0, width, height);
+    
+    fill(255, 180);
+    stroke(0);
+    strokeWeight(4);
+    rect(40, 320, 275, 140, 10);
+    
+    fill(0);
+    noStroke();
+    textSize(16);
+    textFont(myFont);
+    text('THE LONELY ATM', 60, 360);
+    
+    if (mouseX > 50 && mouseX < 130 && mouseY > 380 && mouseY < 440) {
+        fill(255, 255, 50);
+    } else {
+        fill(0, 100, 255);
+    }
+    stroke(0);
+    strokeWeight(3);
+    rect(60, 380, 60, 60, 30);
+    
+    fill(255);
+    textSize(24);
+    text('?', 80, 425);
+    
+    if (mouseX > 150 && mouseX < 300 && mouseY > 380 && mouseY < 440) {
+        fill(50, 255, 255);
+    } else {
+        fill(200, 100, 255);
+    }
+    stroke(0);
+    strokeWeight(3);
+    rect(140, 380, 150, 60, 10);
+    
+    fill(255);
+    textSize(12);
+    text('Interact ->', 150, 415);
+}
+
+function mousePressed() {
+    if (ATMstart === false) {
+        if (mouseX > 150 && mouseX < 300 && mouseY > 380 && mouseY < 440) {
+            ATMstart = true;
+        }
+    }
+}
+
+function showATMscreen() {
     let thisScreen = new ScreenState(ATMsays, width/2, 150, currentOptions);
     thisScreen.display();
-
-    //ATM_start();
-    //console.log(ATMsays);
-    //console.log(newOptions);
-    
-    drawCursor();
 }
 
 //ATM RESPONSE FUNCTIONS
