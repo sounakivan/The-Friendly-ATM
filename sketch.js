@@ -22,8 +22,10 @@ let myFont;
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = false;
+let ATMstart = true;
 let isTransitioning = false;
+
+let pin = [];
 
 function preload() {
     openingView = loadImage('assets/opening view.png');
@@ -53,14 +55,19 @@ function setup() {
     
     //intial variables
     fade = 0;
-    ATMsays = 'Hi there, welcome human. So you want cash?'
-    currentOptions = wantCash;
+//    ATMsays = 'Hi there, welcome human. So you want cash?'
+//    currentOptions = wantCash;
+    
+    //for testing
+    ATMsays = 'Enter your PIN.';
+    currentOptions = pinPad;
 
 }
 
 function gotSpeech() {
         speechInput = speechRec.resultString;
         console.log(speechInput);
+//        console.log(typeof speechInput);
     }
 
 function modelReady() {
@@ -83,23 +90,40 @@ function drawCursor() {
 
 function draw() {
     background(220);
-    //image(video, width/2-120, 360, 240, 180);
 
+    //scene change
     if (ATMstart === false) {
         showStreetCorner();  
     } else {
         showATMscreen();
-        ATMreact();
+        interactWithATM();
         drawCursor();
     }
-    
+    //fade
     if (isTransitioning === true) {
         doFade();
     }
     
+    //pin input on enter pin screen
+    if (pin.length < 5 && ATMstart === true) {
+        fill(80);
+        noStroke();
+        textSize(30);
+        textAlign(LEFT, CENTER);
+        
+        for (let n = 0; n < pin.length; n++) {
+            text(pin[n], 440 + 60*n, 120);
+        }
+    }
 }
 
 function showStreetCorner() {
+    //reset to intial values
+    ATMsays = 'Hi there, welcome human. So you want cash?'
+    currentOptions = wantCash;
+    speechInput = '';
+    
+    //BG image
     image(openingView, 0, 0, width, height);
     
     //UI
@@ -232,18 +256,33 @@ function showATMscreen() {
     text('Choose an option by reading it out aloud into the mic ->', 135, 315, 150, 100);
 }
 
-function ATMreact() {
+function interactWithATM() {
     let thisScreen = new ScreenState(ATMsays, 130, 100, 280, 100, currentOptions);
     thisScreen.display();
     
-    let bye = new UserSelection('Goodbye', 565, 350, 110, 40, goBackToStreet);
+    let bye = new UserSelection('Goodbye', 560, 350, 110, 40, goBackToStreet);
     bye.display();
 }
 
-//ATM RESPONSE FUNCTIONS
+let goBackToStreet = function() {
+    if (ATMstart === true) {
+        isTransitioning = true;
+    }
+    //console.log(ATMstart);
+}
+
+let wantCash = function() {
+    //generate selections
+    let optYes = new UserSelection('Yes', 400, 110, 275, 60, enterPin);
+    let optNo = new UserSelection('No', 400, 185, 275, 60, whyNot);
+    let optMaybe = new UserSelection('Maybe', 400, 260, 275, 60, whyNot);
+    
+    optYes.display();
+    optNo.display();
+    optMaybe.display();
+}
 
 let enterPin = function() {
-    
     ATMsays = 'Enter your PIN.'
     currentOptions = pinPad;
 }
@@ -253,39 +292,60 @@ let whyNot = function() {
     currentOptions = whyNotOpts;
 }
 
-//USER SELECTION FUNCTIONS
-
-let goBackToStreet = function() {
-    if (ATMstart === true) {
-        isTransitioning = true;
-    
-        //reset to start
-        ATMsays = 'Hi there, welcome human. So you want cash?'
-        currentOptions = wantCash;
-        speechInput = '';
-    }
-    console.log(ATMstart);
-}
-
-let wantCash = function() {
-    //generate selections
-    let optYes = new UserSelection('Yes', 400, 110, 275, 60, enterPin);
-    let optNo = new UserSelection('No', 400, 185, 275, 60, whyNot);
-    let optMaybe = new UserSelection('Im ready to let it go, now give me cash', 400, 260, 275, 60, whyNot);
-    
-    optYes.display();
-    optNo.display();
-    optMaybe.display();
-}
-
 let pinPad = function() {
-    //console.log('pin is 8787');
+    //input box
+    fill(255);
+    stroke(0, 0, 255);
+    strokeWeight(2);
+    rect(420, 90, 250, 60, 10);
+    fill(0);
+    noStroke();
+    textSize(30);
+    textAlign(LEFT, CENTER);
+    text('_ _ _ _', 440, 125);
+    
+    //numbers
+    for (let r = 0; r < 3; r++) {
+        for (let i = 0; i < 3; i++) {
+            let numCount = (i + 1) + (3 * r);
+            let num = new UserSelection('' + numCount, 510 + 55*i, 160 + 55*r, 50, 50, inputNum);
+            num.display();
+        }
+    }
+    let num0 = new UserSelection('0', 455, 160, 50, 50, inputNum);
+    num0.display();
+    let enter = new UserSelection('Enter', 425, 215, 80, 50, enterNum);
+    enter.display();
+    let cancel = new UserSelection('Cancel', 415, 270, 90, 50, cancelNum);
+    cancel.display();
+    
+    //console.log('entering pin...')
 }
 
 let whyNotOps = function() {
     
 }
 
+let inputNum = function() {
+    
+    if (pin.length < 4) {
+        pin.push('*');
+    }
+    
+    speechInput = '';
+    console.log(pin);
+    console.log('entering pin...')
+}
+
+let enterNum = function() {
+    console.log('num input');
+}
+
+let cancelNum = function() {
+    pin.length = 0;
+}
+
+//CLASSES
 class ScreenState {
     constructor(screenText, x, y, wd, ht, showOptions) {
         this.screenText = screenText;
@@ -294,7 +354,6 @@ class ScreenState {
         this.wd = wd;
         this.ht = ht;
         this.showOptions = showOptions;
-        this.isState = false;
     }
     
     display() {
@@ -308,8 +367,6 @@ class ScreenState {
     }
 }
 
-//CLASSES
-
 class UserSelection {
     constructor(optionText, xPos, yPos, wd, ht, onSelect) {
         this.optionText = optionText;
@@ -318,24 +375,9 @@ class UserSelection {
         this.wd = wd;
         this.ht = ht;
         this.onSelect = onSelect;
-        this.isActive = false;
-        this.isSelected = false;
     }
     
     display() {
-        //rectMode(CENTER);
-        //detect hover
-//        if (poses) {
-//            if (cx > this.xPos - 50 && cx < this.xPos + 50 && cy > this.yPos - 20 && cy < this.yPos + 20) {
-//                noFill();
-//                stroke(0,0,255)
-//                rect(this.xPos, this.yPos, 210, 50, 5);
-//                fill(0, 0, 255);
-//                this.isSelected = true;
-//            } else {
-//                fill(0, o, 255);
-//            }
-//        }
         fill(0, 0, 255);
         rect(this.xPos, this.yPos, this.wd, this.ht, 5);
         fill(255);
@@ -349,9 +391,9 @@ class UserSelection {
     }
     
     detectSelect() {
-        let lowercaseInput = this.optionText.toLowerCase();
-        if (lowercaseInput === speechInput) {
-            
+        let textInput = this.optionText.toLowerCase(); //turn to lowercase to match speech rec
+    
+        if (textInput === speechInput) { 
             this.onSelect();
         }
     }
