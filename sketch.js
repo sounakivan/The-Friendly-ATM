@@ -22,7 +22,7 @@ let myFont;
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = true;
+let ATMstart = false;
 let isTransitioning = false;
 
 let pin = [];
@@ -55,12 +55,12 @@ function setup() {
     
     //intial variables
     fade = 0;
-//    ATMsays = 'Hi there, welcome human. So you want cash?'
-//    currentOptions = wantCash;
+    ATMsays = 'Hi there, welcome friend! Do you want some cash?'
+    currentOptions = wantCash;
     
     //for testing
-    ATMsays = 'Enter your PIN.';
-    currentOptions = pinPad;
+//    ATMsays = 'Enter your PIN. Dont worry, I can keep a secret!';
+//    currentOptions = pinPad;
 
 }
 
@@ -119,9 +119,10 @@ function draw() {
 
 function showStreetCorner() {
     //reset to intial values
-    ATMsays = 'Hi there, welcome human. So you want cash?'
+    ATMsays = 'Hi there, welcome friend! Do you want some cash?'
     currentOptions = wantCash;
     speechInput = '';
+    pin = [];
     
     //BG image
     image(openingView, 0, 0, width, height);
@@ -282,14 +283,51 @@ let wantCash = function() {
     optMaybe.display();
 }
 
-let enterPin = function() {
-    ATMsays = 'Enter your PIN.'
-    currentOptions = pinPad;
-}
-
 let whyNot = function() {
     ATMsays = 'Why not?'
     currentOptions = whyNotOpts;
+}
+
+let whyNotOpts = function() {
+    let optSatisfy = new UserSelection('Because money cannot satisfy me', 400, 110, 275, 60, wantAdvice);
+    let optTalk = new UserSelection('Just wanted someone to talk to', 400, 185, 275, 60, letsTalk);
+    let optCash = new UserSelection('Nevermind just give me cash', 400, 260, 275, 60, enterPin);
+    optSatisfy.display();
+    optTalk.display();
+    optCash.display();
+}
+
+let wantAdvice = function() {
+    ATMsays = 'I have seen many like you. Want some free advice?';
+    currentOptions = toAdviceOrNotToAdvice;
+}
+
+let toAdviceOrNotToAdvice = function() {
+    let optRefuse = new UserSelection('No just give me cash', 400, 110, 275, 60, enterPin);
+    let optAccept = new UserSelection('Some advice will be helpful', 400, 185, 275, 60, getAdvice);
+    optRefuse.display();
+    optAccept.display();
+}
+
+let letsTalk = function() {
+    ATMsays = 'Lets talk while you get cash, or do you want advice instead?';
+    currentOptions = letsTalkOpts;
+}
+
+let letsTalkOpts = function() {
+    let optAdvice = new UserSelection('Okay give me cash', 400, 110, 275, 60, enterPin);
+    let optTalk = new UserSelection('Some advice will be helpful', 400, 185, 275, 60, getAdvice);
+    optAdvice.display();
+    optTalk.display();
+}
+
+let getAdvice = function() {
+    console.log('giving advice...')
+}
+
+let enterPin = function() {
+    ATMsays = 'Enter your PIN. Your secret is safe with me!'
+    currentOptions = pinPad;
 }
 
 let pinPad = function() {
@@ -322,10 +360,6 @@ let pinPad = function() {
     //console.log('entering pin...')
 }
 
-let whyNotOps = function() {
-    
-}
-
 let inputNum = function() {
     
     if (pin.length < 4) {
@@ -333,12 +367,17 @@ let inputNum = function() {
     }
     
     speechInput = '';
-    console.log(pin);
-    console.log('entering pin...')
+//    console.log(pin);
+//    console.log('entering pin...')
 }
 
 let enterNum = function() {
-    console.log('num input');
+    if (pin.length <= 3) {
+        ATMsays = 'I think you are missing a number or two...';
+    }
+    else if (pin.length > 3 && pin.length < 5) {
+        ATMsays = 'Well not quite... but good enough!';
+    }
 }
 
 let cancelNum = function() {
