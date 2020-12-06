@@ -24,7 +24,7 @@ let myFont;
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = true;
+let ATMstart = false;
 let isTransitioning = false;
 
 let pin = [];
@@ -57,12 +57,12 @@ function setup() {
     
     //intial variables
     fade = 0;
-//    ATMsays = 'Hi there, welcome friend! Do you want some cash?'
-//    currentOptions = wantCash;
+    ATMsays = 'Hi there, welcome friend! Do you want some cash?'
+    currentOptions = wantCash;
     
     //for testing
-    ATMsays = 'Not enough to buy love and happiness.'
-    currentOptions = loveAndHappiness;
+//    ATMsays = 'Not enough to buy love and happiness.'
+//    currentOptions = loveAndHappiness;
 }
 
 function gotSpeech() {
