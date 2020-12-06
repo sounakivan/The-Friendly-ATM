@@ -12,6 +12,7 @@ let speechRec;
 let speechInput;
 
 let advice_url = 'https://api.adviceslip.com/advice';
+//let adviceSlip = '';
 
 //Atm screen
 let ATMsays;
@@ -25,7 +26,7 @@ let asciEmoji = '._.';
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = true;
+let ATMstart = false;
 let isTransitioning = false;
 
 let pin = [];
@@ -158,6 +159,7 @@ function showStreetCorner() {
     currentOptions = wantCash;
     speechInput = '';
     pin = [];
+    cash = [];
     
     //BG image
     image(openingView, 0, 0, width, height);
@@ -173,8 +175,8 @@ function showStreetCorner() {
     noStroke();
     textSize(18);
     textFont(myFont);
-    textAlign(LEFT);
-    text('THE FRIENDLY ATM', 60, 300);
+    textAlign(LEFT, TOP);
+    text('THE FRIENDLY ATM', 60, 280);
     fill(80, 5, 255);
     noStroke();
     textSize(12);
@@ -241,11 +243,11 @@ function showATMscreen() {
     strokeWeight(2);
     line(275, 220, 275, 320);
     line(275, 320, 325, 370);
-    line(325, 370, 375, 370);
+    line(325, 370, 450, 370);
     noStroke();
     strokeWeight(1);
     if (poses.length > 0) {
-        let d = dist(cx, cy, 400, 370);
+        let d = dist(cx, cy, 450, 370);
         if (d < 40) {
             fill(255, 255, 0);
             stroke(0, 255, 100);
@@ -253,25 +255,25 @@ function showATMscreen() {
             fill(0, 255, 100);
         }
     }
-    ellipse(400, 370, 65);
-    image(micIcon, 375, 345, 50, 50);
+    ellipse(450, 370, 65);
+    image(micIcon, 425, 345, 50, 50);
     noFill();
-    ellipse(400, 370, 60);
-    ellipse(400, 370, 72);
-    ellipse(400, 370, 80);
+    ellipse(450, 370, 60);
+    ellipse(450, 370, 72);
+    ellipse(450, 370, 80);
     
     //speechBubble
     fill(255);
     noStroke();
-    rect(125, 230, 265, 100, 10);
+    rect(115, 230, 265, 180, 10);
     triangle(140, 230, 150, 230, 160, 200);
     
     //instructions
-    fill(0, 0, 255);
-    noStroke();
-    textSize(9);
-    textFont(myFont);
-    text('Read out the exact text of an option into the mic ->', 130, 320, 180, 100);
+//    fill(0, 0, 255);
+//    noStroke();
+//    textSize(9);
+//    textFont(myFont);
+//    text('Read out the exact text of an option into the mic ->', 130, 320, 180, 100);
 }
 
 function drawEmoji() {
@@ -285,7 +287,7 @@ function drawEmoji() {
 }
 
 function interactWithATM() {
-    let thisScreen = new ScreenState(ATMsays, 140, 250, 260, 100, currentOptions);
+    let thisScreen = new ScreenState(ATMsays, 130, 250, 260, 180, currentOptions);
     thisScreen.display();
     
     let bye = new UserSelection('Goodbye', 575, 350, 100, 40, goBackToStreet);
@@ -349,23 +351,22 @@ let letsTalkOpts = function() {
 }
 
 let getAdvice = function() {
-//    fetch(advice_url)
-//    .then(response => 
-//          console.log(response));
-          //response.json())
-    //.then(advice => printAdvice(advice));
-    
-    ATMsays = 'Place good advice here.';
-    currentOptions = thatHelps;
+    speechInput = '';
+    fetch(advice_url)
+    .then(response => response.json())
+        .then(advice => printAdvice(advice));
 }
 
 function printAdvice(advice) {
-    
+    let adviceSlip = '' + advice.slip.advice
+    //console.log(adviceSlip)
+    ATMsays = adviceSlip;
+    currentOptions = thatHelps;
 }
 
 let thatHelps = function() {
     let optHelps = new UserSelection('Okay give me cash', 400, 110, 275, 60, getCashAmt);
-    let optMore = new UserSelection('Give me some more advice', 400, 185, 275, 60, getAdvice);
+    let optMore = new UserSelection('Give me more advice', 400, 185, 275, 60, getAdvice);
     optHelps.display();
     optMore.display();
 }
@@ -424,7 +425,6 @@ let inputNum = function() {
             }
         }
     }
-
 }
 
 let enterNum = function() {
@@ -447,8 +447,7 @@ let enterNum = function() {
             outputCash();
             cash.length = 0;
         }
-    }
-    
+    }  
 }
 
 let cancelNum = function() {
@@ -469,7 +468,6 @@ let cancelNum = function() {
             speechInput = '';
         }
     }
-    
 }
 
 let userOpts = function() {
@@ -538,7 +536,7 @@ class ScreenState {
         noStroke();
         textFont(myFont);
         textAlign(LEFT, TOP);
-        text(this.screenText, this.x, this.y, this.wd, this.ht);
+        text(this.screenText, this.x, this.y, this.wd-10, this.ht);
         this.showOptions();
     }
 }
