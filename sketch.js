@@ -20,14 +20,17 @@ let openingView;
 let atmScreen;
 let micIcon;
 let myFont;
+let asciEmoji = '._.';
 
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = false;
+let ATMstart = true;
 let isTransitioning = false;
 
 let pin = [];
+let isPin = true;
+let cash = [];
 
 function preload() {
     openingView = loadImage('assets/opening view.png');
@@ -70,6 +73,13 @@ function gotSpeech() {
     speechInput = mySpeech.toLowerCase();
     console.log(speechInput);
 //        console.log(typeof speechInput);
+    
+    //detect start command
+    if (ATMstart === false) {
+        if (speechInput === 'interact') {
+            isTransitioning = true;
+        }
+    }
 }
 
 function modelReady() {
@@ -95,7 +105,7 @@ function draw() {
 
     //scene change
     if (ATMstart === false) {
-        showStreetCorner();  
+        showStreetCorner();
     } else {
         showATMscreen();
         interactWithATM();
@@ -108,7 +118,7 @@ function draw() {
     
     //pin input on enter pin screen
     if (pin.length < 5 && ATMstart === true) {
-        fill(80);
+        fill(20);
         noStroke();
         textSize(30);
         textAlign(LEFT, CENTER);
@@ -116,6 +126,29 @@ function draw() {
         for (let n = 0; n < pin.length; n++) {
             text(pin[n], 440 + 60*n, 120);
         }
+    }
+    
+    //cash input
+    if (cash.length < 9 && ATMstart === true) {
+        fill(20);
+        noStroke();
+        textSize(18);
+        textAlign(LEFT, CENTER);
+        
+        for (let n = 0; n < cash.length; n++) {
+            push();
+            translate(-20*cash.length, 0);
+            text(cash[n], 660 + 20*n, 120);
+            pop();
+        }
+    }
+    //if max amt reached
+    if (cash.length === 8) {
+        fill(255, 0, 0);
+        noStroke();
+        textSize(18);
+        textAlign(LEFT, CENTER);
+        text('MAX', 440, 120);
     }
 }
 
@@ -134,57 +167,38 @@ function showStreetCorner() {
     fill(255, 180);
     stroke(0);
     strokeWeight(4);
-    rect(40, 300, 300, 180, 10);
+    rect(40, 260, 330, 230, 10);
     
     fill(0);
-    stroke(255);
-    strokeWeight(2);
+    noStroke();
     textSize(18);
     textFont(myFont);
     textAlign(LEFT);
-    text('THE LONELY ATM', 60, 340);
-    textSize(10);
+    text('THE FRIENDLY ATM', 60, 300);
+    fill(80, 5, 255);
+    noStroke();
+    textSize(12);
     textAlign(LEFT, TOP);
-    text('Stop by for money, advice or just a chat.', 60, 355, 280, 100);
-    
-    //about button
-    if (mouseX > 60 && mouseX < 120 && mouseY > 400 && mouseY < 460) {
-        fill(255, 255, 50);
-    } else {
-        fill(0, 100, 255);
-    }
-    stroke(0);
-    strokeWeight(3);
-    rect(60, 400, 60, 60, 30);
-    
-    fill(255);
-    textSize(24);
-    textAlign(LEFT, CENTER);
-    text('?', 80, 435);
+    text('Stop by for money, advice or just a chat.', 60, 315, 280, 100);
+    fill(150, 45, 25);
+    textSize(9);
+    text('This ATM uses face tracking and voice for input.', 60, 355, 260, 100);
+    text('Read out the exact text in a button to select it.', 60, 385, 260, 100);
+    textSize(18);
+    text('-->', 130, 440, 260, 100)
     
     //interact button
-    if (mouseX > 140 && mouseX < 290 && mouseY > 400 && mouseY < 460) {
-        fill(50, 255, 255);
-    } else {
-        fill(200, 100, 255);
-    }
-    stroke(0);
-    strokeWeight(3);
-    rect(140, 400, 150, 60, 10);
+    fill(0, 0, 255);
+    stroke(255);
+    strokeWeight(2);
+    rect(200, 425, 150, 50, 10);
     
     fill(255);
+    noStroke();
     textSize(12);
     textAlign(LEFT, CENTER);
-    text('Interact ->', 150, 435);
+    text('Interact', 225, 450);
     pop();
-}
-
-function mousePressed() {
-    if (ATMstart === false) {
-        if (mouseX > 150 && mouseX < 300 && mouseY > 380 && mouseY < 440) {
-            isTransitioning = true;
-        }
-    }
 }
 
 function doFade() {
@@ -218,52 +232,63 @@ function showATMscreen() {
     //draw ATM face
     noStroke();
     fill(0, 255, 100);
-    rect(125, 190, 250, 130, 30);
+    rect(150, 90, 200, 130, 30);
     
+    drawEmoji();
+    
+    //draw mic
+    stroke(0, 255, 100);
+    strokeWeight(2);
+    line(275, 220, 275, 320);
+    line(275, 320, 325, 370);
+    line(325, 370, 375, 370);
+    noStroke();
+    strokeWeight(1);
+    if (poses.length > 0) {
+        let d = dist(cx, cy, 400, 370);
+        if (d < 40) {
+            fill(255, 255, 0);
+            stroke(0, 255, 100);
+        } else {
+            fill(0, 255, 100);
+        }
+    }
+    ellipse(400, 370, 65);
+    image(micIcon, 375, 345, 50, 50);
+    noFill();
+    ellipse(400, 370, 60);
+    ellipse(400, 370, 72);
+    ellipse(400, 370, 80);
+    
+    //speechBubble
+    fill(255);
+    noStroke();
+    rect(125, 230, 265, 100, 10);
+    triangle(140, 230, 150, 230, 160, 200);
+    
+    //instructions
+    fill(0, 0, 255);
+    noStroke();
+    textSize(9);
+    textFont(myFont);
+    text('Read out the exact text of an option into the mic ->', 130, 320, 180, 100);
+}
+
+function drawEmoji() {
     //draw ATM's ASCI expression
     fill(0, 101, 68);
     noStroke();
     textFont(myFont);
     textAlign(LEFT, CENTER);
     textSize(45);
-    text('._.', 200, 265);
-    
-    //draw mic
-    stroke(0, 255, 100);
-    strokeWeight(2);
-    line(275, 320, 325, 370);
-    line(325, 370, 450, 370);
-    noStroke();
-    strokeWeight(1);
-    if (poses.length > 0) {
-        let d = dist(cx, cy, 450, 370);
-        if (d < 40) {
-            fill(255, 255, 0);
-            stroke(0, 255, 100);
-        } else {
-            fill(255, 100, 0);
-        }
-    }
-    ellipse(450, 370, 65);
-    image(micIcon, 425, 345, 50, 50);
-    noFill();
-    ellipse(450, 370, 60);
-    ellipse(450, 370, 72);
-    ellipse(450, 370, 80);
-    
-    //instructions
-    fill(0, 0, 255);
-    noStroke();
-    textSize(8);
-    textFont(myFont);
-    text('Choose an option by reading it out aloud into the mic ->', 135, 315, 150, 100);
+    text(asciEmoji, 200, 175);
 }
 
 function interactWithATM() {
-    let thisScreen = new ScreenState(ATMsays, 130, 100, 280, 100, currentOptions);
+    let thisScreen = new ScreenState(ATMsays, 140, 250, 260, 100, currentOptions);
     thisScreen.display();
     
-    let bye = new UserSelection('Goodbye', 560, 350, 110, 40, goBackToStreet);
+    let bye = new UserSelection('Goodbye', 575, 350, 100, 40, goBackToStreet);
     bye.display();
 }
 
@@ -329,28 +354,42 @@ let getAdvice = function() {
 //          console.log(response));
           //response.json())
     //.then(advice => printAdvice(advice));
+    
+    ATMsays = 'Place good advice here.';
+    currentOptions = thatHelps;
 }
 
 function printAdvice(advice) {
     
 }
 
-let enterPin = function() {
-    ATMsays = 'Enter your PIN. Your secret is safe with me!'
-    currentOptions = pinPad;
+let thatHelps = function() {
+    let optHelps = new UserSelection('Okay give me cash', 400, 110, 275, 60, getCashAmt);
+    let optMore = new UserSelection('Give me some more advice', 400, 185, 275, 60, getAdvice);
+    optHelps.display();
+    optMore.display();
 }
 
-let pinPad = function() {
+let enterPin = function() {
+    ATMsays = 'Enter your PIN. Your secret is safe with me!'
+    isPin = true;
+    currentOptions = numPad;
+}
+
+let numPad = function() {
     //input box
     fill(255);
     stroke(0, 0, 255);
     strokeWeight(2);
     rect(420, 90, 250, 60, 10);
-    fill(0);
-    noStroke();
-    textSize(30);
-    textAlign(LEFT, CENTER);
-    text('_ _ _ _', 440, 125);
+    
+    if (isPin === true) {
+        fill(0);
+        noStroke();
+        textSize(30);
+        textAlign(LEFT, CENTER);
+        text('_ _ _ _', 440, 125);
+    }
     
     //numbers
     for (let r = 0; r < 3; r++) {
@@ -371,34 +410,71 @@ let pinPad = function() {
 }
 
 let inputNum = function() {
-    
-    if (pin.length < 4) {
-        pin.push('*');
+    if (isPin === true) {
+        if (pin.length < 4) {
+            pin.push('*');
+        }
+        speechInput = '';
+    } else {
+        if (cash.length < 8) {
+            if (speechInput === '0','1','2','3','4','5','6','7','8','9') {
+                cash.push(speechInput);
+                //console.log(isPin);
+                speechInput = '';
+            }
+        }
     }
-    
-    speechInput = '';
-//    console.log(pin);
-//    console.log('entering pin...')
+
 }
 
 let enterNum = function() {
-    if (pin.length <= 3) {
-        ATMsays = 'I think you are missing a number or two...';
+    if (isPin === true) {
+        if (pin.length <= 3) {
+            ATMsays = 'I think you are missing a number or two...';
+        }
+        else if (pin.length > 3 && pin.length < 5) {
+            ATMsays = 'Good enough! What can I do for you?';
+            currentOptions = userOpts;
+            pin.length = 0;
+        }
+    } else {
+        if (cash.length === 0) {
+            ATMsays = 'Dont be shy! Just say a number...';
+        }
+        else if (cash.length > 0 && cash.length < 9) {
+            ATMsays = 'Here you go! Anything else?';
+            currentOptions = userOpts;
+            outputCash();
+            cash.length = 0;
+        }
     }
-    else if (pin.length > 3 && pin.length < 5) {
-        ATMsays = 'Good enough! What can I do for you?';
-        currentOptions = userOpts;
-        pin.length = 0;
-    }
+    
 }
 
 let cancelNum = function() {
-    pin.length = 0;
+    if (isPin === true) {
+        if (pin.length === 0) {
+            ATMsays = 'Hi there, welcome friend! Do you want some cash?'
+            currentOptions = wantCash;
+        } else {
+            pin.length = 0;
+            speechInput = '';
+        }
+    } else {
+        if (cash.length === 0) {
+            ATMsays = 'What can I do for you?';
+            currentOptions = userOpts;
+        } else {
+            cash.length = 0;
+            speechInput = '';
+        }
+    }
+    
 }
 
 let userOpts = function() {
     let optGiveCash = new UserSelection('Give me cash', 400, 110, 275, 60, getCashAmt);
-    let optMyBalance = new UserSelection('How much money do I have', 400, 185, 275, 60, notEnough);
+    let optMyBalance = new UserSelection('How much cash do I have', 400, 185, 275, 60, notEnough);
     //let optGiveAdvice = new UserSelection('Give me advice', 400, 260, 275, 60, getAdvice);
     optGiveCash.display();
     optMyBalance.display();
@@ -406,12 +482,13 @@ let userOpts = function() {
 }
 
 let notEnough = function() {
-    ATMsays = 'Not enough to buy love and happiness.'
+    let bal = random(1,99999999).toFixed();
+    ATMsays = 'You have $' + bal + ' but not enough to buy love & happiness.'
     currentOptions = loveAndHappiness;
 }
 
 let loveAndHappiness = function() {
-    let optOkCash = new UserSelection('That is okay just give me cash', 400, 110, 275, 60, getCashAmt);
+    let optOkCash = new UserSelection('Well whatever just give me cash', 400, 110, 275, 60, getCashAmt);
     let optFindLove = new UserSelection('Will I ever find love and happiness', 400, 185, 275, 60, letItGo);
     optOkCash.display();
     optFindLove.display();
@@ -423,7 +500,7 @@ let letItGo = function() {
 }
 
 let thanks = function() {
-    let optThanks = new UserSelection('Thanks I feel better now', 400, 110, 275, 60, noProblem);
+    let optThanks = new UserSelection('Thank you ATM I feel better now', 400, 110, 275, 60, noProblem);
     let optReady = new UserSelection('I am ready to let it go now give me cash', 400, 185, 275, 60, getCashAmt);
     optThanks.display();
     optReady.display();
@@ -436,6 +513,12 @@ let noProblem = function() {
 
 let getCashAmt = function() {
     ATMsays = 'Alright! How much cash do you want?'
+    isPin = false;
+    currentOptions = numPad;
+}
+
+function outputCash() {
+    console.log('outputting cash...')
 }
 
 //CLASSES
@@ -450,7 +533,7 @@ class ScreenState {
     }
     
     display() {
-        textSize(16);
+        textSize(14);
         fill(0);
         noStroke();
         textFont(myFont);
