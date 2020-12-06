@@ -11,6 +11,8 @@ let r = 20;
 let speechRec;
 let speechInput;
 
+let advice_url = 'https://api.adviceslip.com/advice';
+
 //Atm screen
 let ATMsays;
 let currentOptions;
@@ -22,7 +24,7 @@ let myFont;
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = false;
+let ATMstart = true;
 let isTransitioning = false;
 
 let pin = [];
@@ -55,20 +57,20 @@ function setup() {
     
     //intial variables
     fade = 0;
-    ATMsays = 'Hi there, welcome friend! Do you want some cash?'
-    currentOptions = wantCash;
+//    ATMsays = 'Hi there, welcome friend! Do you want some cash?'
+//    currentOptions = wantCash;
     
     //for testing
-//    ATMsays = 'Enter your PIN. Dont worry, I can keep a secret!';
-//    currentOptions = pinPad;
-
+    ATMsays = 'Not enough to buy love and happiness.'
+    currentOptions = loveAndHappiness;
 }
 
 function gotSpeech() {
-        speechInput = speechRec.resultString;
-        console.log(speechInput);
+    let mySpeech = speechRec.resultString;
+    speechInput = mySpeech.toLowerCase();
+    console.log(speechInput);
 //        console.log(typeof speechInput);
-    }
+}
 
 function modelReady() {
     console.log("Model ready!");
@@ -290,8 +292,8 @@ let whyNot = function() {
 
 let whyNotOpts = function() {
     let optSatisfy = new UserSelection('Because money cannot satisfy me', 400, 110, 275, 60, wantAdvice);
-    let optTalk = new UserSelection('Just wanted someone to talk to', 400, 185, 275, 60, letsTalk);
-    let optCash = new UserSelection('Nevermind just give me cash', 400, 260, 275, 60, enterPin);
+    let optTalk = new UserSelection('Just wanted to talk', 400, 185, 275, 60, letsTalk);
+    let optCash = new UserSelection('Nevermind give me cash', 400, 260, 275, 60, enterPin);
     optSatisfy.display();
     optTalk.display();
     optCash.display();
@@ -304,7 +306,7 @@ let wantAdvice = function() {
 
 let toAdviceOrNotToAdvice = function() {
     let optRefuse = new UserSelection('No just give me cash', 400, 110, 275, 60, enterPin);
-    let optAccept = new UserSelection('Some advice will be helpful', 400, 185, 275, 60, getAdvice);
+    let optAccept = new UserSelection('Okay give me advice', 400, 185, 275, 60, getAdvice);
     optRefuse.display();
     optAccept.display();
 }
@@ -315,14 +317,22 @@ let letsTalk = function() {
 }
 
 let letsTalkOpts = function() {
-    let optAdvice = new UserSelection('Okay give me cash', 400, 110, 275, 60, enterPin);
-    let optTalk = new UserSelection('Some advice will be helpful', 400, 185, 275, 60, getAdvice);
+    let optAdvice = new UserSelection('Give me cash', 400, 110, 275, 60, enterPin);
+    let optTalk = new UserSelection('Give me advice', 400, 185, 275, 60, getAdvice);
     optAdvice.display();
     optTalk.display();
 }
 
 let getAdvice = function() {
-    console.log('giving advice...')
+//    fetch(advice_url)
+//    .then(response => 
+//          console.log(response));
+          //response.json())
+    //.then(advice => printAdvice(advice));
+}
+
+function printAdvice(advice) {
+    
 }
 
 let enterPin = function() {
@@ -376,12 +386,56 @@ let enterNum = function() {
         ATMsays = 'I think you are missing a number or two...';
     }
     else if (pin.length > 3 && pin.length < 5) {
-        ATMsays = 'Well not quite... but good enough!';
+        ATMsays = 'Good enough! What can I do for you?';
+        currentOptions = userOpts;
+        pin.length = 0;
     }
 }
 
 let cancelNum = function() {
     pin.length = 0;
+}
+
+let userOpts = function() {
+    let optGiveCash = new UserSelection('Give me cash', 400, 110, 275, 60, getCashAmt);
+    let optMyBalance = new UserSelection('How much money do I have', 400, 185, 275, 60, notEnough);
+    //let optGiveAdvice = new UserSelection('Give me advice', 400, 260, 275, 60, getAdvice);
+    optGiveCash.display();
+    optMyBalance.display();
+    //optGiveAdvice.display();
+}
+
+let notEnough = function() {
+    ATMsays = 'Not enough to buy love and happiness.'
+    currentOptions = loveAndHappiness;
+}
+
+let loveAndHappiness = function() {
+    let optOkCash = new UserSelection('That is okay just give me cash', 400, 110, 275, 60, getCashAmt);
+    let optFindLove = new UserSelection('Will I ever find love and happiness', 400, 185, 275, 60, letItGo);
+    optOkCash.display();
+    optFindLove.display();
+}
+
+let letItGo = function() {
+    ATMsays = 'Not if you cling to it, and only if you let it go.'
+    currentOptions = thanks;
+}
+
+let thanks = function() {
+    let optThanks = new UserSelection('Thanks I feel better now', 400, 110, 275, 60, noProblem);
+    let optReady = new UserSelection('I am ready to let it go now give me cash', 400, 185, 275, 60, getCashAmt);
+    optThanks.display();
+    optReady.display();
+}
+
+let noProblem = function() {
+    ATMsays = 'No problem! What else can I do for you?'
+    currentOptions = userOpts;
+}
+
+let getCashAmt = function() {
+    ATMsays = 'Alright! How much cash do you want?'
 }
 
 //CLASSES
@@ -424,7 +478,7 @@ class UserSelection {
         textSize(11);
         textFont(myFont);
         textAlign(RIGHT, CENTER);
-        text(this.optionText, this.xPos, this.yPos, this.wd, this.ht);
+        text(this.optionText, this.xPos+10, this.yPos, this.wd-10, this.ht);
         
         this.detectSelect();
     }
