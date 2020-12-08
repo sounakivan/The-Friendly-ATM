@@ -14,13 +14,17 @@ let speechInput;
 let advice_url = 'https://api.adviceslip.com/advice';
 //let adviceSlip = '';
 
-//Atm screen
-let ATMsays;
-let currentOptions;
+//preload
 let openingView;
 let atmScreen;
 let micIcon;
 let myFont;
+let glow;
+let selectSound;
+
+//Atm screen
+let ATMsays;
+let currentOptions;
 let asciEmoji = '._.';
 
 //scene transition
@@ -28,6 +32,7 @@ let fade;
 let fadeAmt = 5;
 let ATMstart = false;
 let isTransitioning = false;
+let btnClr;
 
 let pin = [];
 let isPin = true;
@@ -38,6 +43,9 @@ function preload() {
     atmScreen = loadImage('assets/atm-screen-view.png');
     myFont = loadFont('assets/PressStart2P-Regular.ttf');
     micIcon = loadImage('assets/mic-icon.png');
+    glow = loadImage('assets/glow.png');
+    startSound = loadSound('assets/btnchime.mp3');
+    selectSound = loadSound('assets/hint.mp3');
 }
 
 function setup() {
@@ -63,6 +71,7 @@ function setup() {
     fade = 0;
     ATMsays = 'Hi there, welcome friend! Do you want some cash?'
     currentOptions = wantCash;
+    btnClr = color(0, 0, 255);
     
     //for testing
 //    ATMsays = 'Not enough to buy love and happiness.'
@@ -78,6 +87,9 @@ function gotSpeech() {
     //detect start command
     if (ATMstart === false) {
         if (speechInput === 'interact') {
+            startSound.amp(0.3);
+            startSound.play();
+            btnClr = color(0, 150, 0);
             isTransitioning = true;
         }
     }
@@ -111,6 +123,7 @@ function draw() {
         showATMscreen();
         interactWithATM();
         drawCursor();
+        btnClr = color(0, 0, 255);
     }
     //fade
     if (isTransitioning === true) {
@@ -161,38 +174,43 @@ function showStreetCorner() {
     pin = [];
     cash = [];
     
-    //BG image
+    //BG image and flickering glow
     image(openingView, 0, 0, width, height);
+    tint(255,random(100,255))
+    image(glow, 0, 0, width, height);
+    noTint();
     
     //UI
     push();
-    fill(255, 180);
-    stroke(0);
-    strokeWeight(4);
-    rect(40, 260, 330, 230, 10);
-    
+    fill(0,150);
+    stroke(50);
+    strokeWeight(2);
+    rect(40, 285, 330, 205, 10);
     fill(0);
+    rect(40, 285, 330, 45, 10, 10, 0, 0)
+    fill(255);
     noStroke();
-    textSize(18);
+    textSize(20);
     textFont(myFont);
     textAlign(LEFT, TOP);
-    text('THE FRIENDLY ATM', 60, 280);
-    fill(80, 5, 255);
+    text('THE FRIENDLY ATM', 45, 300);
+    
+    fill(255, 100, 0);
     noStroke();
-    textSize(12);
+    textSize(14);
     textAlign(LEFT, TOP);
-    text('Stop by for money, advice or just a chat.', 60, 315, 280, 100);
-    fill(150, 45, 25);
+    text('Get money, advice or just chat!', 60, 345, 300, 100);
+    fill(255, 255, 0);
     textSize(9);
-    text('This ATM uses face tracking and voice for input.', 60, 355, 260, 100);
-    text('Read out the exact text in a button to select it.', 60, 385, 260, 100);
+    text('Uses webcam and voice input.', 60, 395, 280, 100);
+    //text('Read out the text in the button to start.', 60, 385, 260, 100);
     textSize(18);
-    text('-->', 130, 440, 260, 100)
+    text('Say-->', 80, 440, 260, 100)
     
     //interact button
-    fill(0, 0, 255);
+    fill(btnClr);
     stroke(255);
-    strokeWeight(2);
+    strokeWeight(1);
     rect(200, 425, 150, 50, 10);
     
     fill(255);
@@ -365,7 +383,7 @@ function printAdvice(advice) {
 }
 
 let thatHelps = function() {
-    let optHelps = new UserSelection('Okay give me cash', 400, 110, 275, 60, getCashAmt);
+    let optHelps = new UserSelection('Okay give me cash', 400, 110, 275, 60, enterPin);
     let optMore = new UserSelection('Give me more advice', 400, 185, 275, 60, getAdvice);
     optHelps.display();
     optMore.display();
@@ -486,7 +504,7 @@ let notEnough = function() {
 }
 
 let loveAndHappiness = function() {
-    let optOkCash = new UserSelection('Well whatever just give me cash', 400, 110, 275, 60, getCashAmt);
+    let optOkCash = new UserSelection('Whatever just give me cash', 400, 110, 275, 60, getCashAmt);
     let optFindLove = new UserSelection('Will I ever find love and happiness', 400, 185, 275, 60, letItGo);
     optOkCash.display();
     optFindLove.display();
@@ -549,10 +567,11 @@ class UserSelection {
         this.wd = wd;
         this.ht = ht;
         this.onSelect = onSelect;
+        this.isSelected = false;
     }
     
     display() {
-        fill(0, 0, 255);
+        this.detectSpeechInput();
         rect(this.xPos, this.yPos, this.wd, this.ht, 5);
         fill(255);
         noStroke();
@@ -560,15 +579,18 @@ class UserSelection {
         textFont(myFont);
         textAlign(RIGHT, CENTER);
         text(this.optionText, this.xPos+10, this.yPos, this.wd-10, this.ht);
-        
-        this.detectSelect();
     }
     
-    detectSelect() {
-        let textInput = this.optionText.toLowerCase(); //turn to lowercase to match speech rec
-    
-        if (textInput === speechInput) { 
-            this.onSelect();
+    detectSpeechInput() {
+        let textInput = this.optionText.toLowerCase();
+        if (textInput === speechInput) {
+            selectSound.amp(0.3);
+            selectSound.play();
+            setTimeout(this.onSelect, 1000);
+            speechInput = '';
+            fill(0, 255, 0);
+        } else {
+            fill(0, 0, 255);
         }
     }
 }
