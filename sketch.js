@@ -11,6 +11,7 @@ let r = 40;
 let speechRec;
 let speechInput;
 let speechProxy;
+let textP;
 
 let advice_url = 'https://api.adviceslip.com/advice';
 //let adviceSlip = '';
@@ -40,10 +41,11 @@ let count = 6;
 //scene transition
 let fade;
 let fadeAmt = 5;
-let ATMstart = true;
+let ATMstart = false;
 let isTransitioning = false;
 let btnClr;
 
+//cash
 let pin = [];
 let isPin = true;
 let cash = [];
@@ -79,13 +81,18 @@ function setup() {
     
     startSpeech();
     
+    let yourInputHere = createP('What ATM hears: ');
+    yourInputHere.position(20, 520);
+    textP = createP('Your speech input will show up here.');
+    textP.position(150, 520)
+    
     //intial variables
     fade = 0;
     btnClr = color(0, 0, 255);
     
     //for testing
-    ATMsays = 'How much cash you want?'
-    currentOptions = getCashAmt;
+//    ATMsays = 'How much cash you want?'
+//    currentOptions = getCashAmt;
 }
 
 function startSpeech() {
@@ -121,8 +128,8 @@ function drawCursor() {
         //console.log(poses);
         let mouthPos = poses[0].pose.nose;
         //console.log(mouthPos);
-        cx = mouthPos.x;
-        cy = mouthPos.y + 50;
+        cx = constrain(mouthPos.x, 100, 670);
+        cy = constrain(mouthPos.y + 50, 65, 390);
         noStroke();    
         fill(255, 150, 0, 126);
         image(mouthIcon, cx, cy, r+10, r);
@@ -131,6 +138,13 @@ function drawCursor() {
 
 function draw() {
     background(220);
+    
+    if (speechProxy === '' || speechProxy == undefined) {
+        textP.html('Your speech input will show up here.');
+    } else {
+        textP.html(speechProxy);
+    }
+    
 
     //scene change
     if (ATMstart === false) {
