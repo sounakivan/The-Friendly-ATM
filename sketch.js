@@ -426,7 +426,7 @@ let faceScan = function() {
         ATMsays = 'Scan complete! Move your head to over over the mic. Read the exact text in a button to select.'
         image(checkMark, 490, 150, 100, 100);
         noStroke();
-        let next = new UserSelection('Next', 575, 300, 100, 40, interact);
+        let next = new UserSelection('Go', 575, 300, 100, 40, interact);
         next.display();
     }
 }
@@ -549,7 +549,7 @@ let numPad = function() {
     }
     let num0 = new UserSelection('0', 455, 160, 50, 50, inputNum);
     num0.display();
-    let enter = new UserSelection('Enter', 425, 215, 80, 50, enterNum);
+    let enter = new UserSelection('Go', 425, 215, 80, 50, enterNum);
     enter.display();
     let cancel = new UserSelection('Cancel', 415, 270, 90, 50, cancelNum);
     cancel.display();
