@@ -8,7 +8,9 @@ let cx = 400, cy = 250;
 let r = 40;
 
 //speech API
-let speechRec;
+let speechRec = new p5.SpeechRec();
+//speechRec.continuous = false;
+//speechRec.interimResults = true;
 let speechInput;
 let speechProxy;
 let textP;
@@ -20,7 +22,7 @@ let advice_url = 'https://api.adviceslip.com/advice';
 let openingView;
 let atmScreen;
 let micIcon;
-let mouthIcon;
+let cursorIcon;
 let myFont;
 let glow;
 let selectSound;
@@ -37,6 +39,7 @@ let scanY = 90;
 let cActive = false;
 let startCount = 0;
 let count = 6;
+let loader = 0;
 
 //scene transition
 let fade;
@@ -58,7 +61,7 @@ function preload() {
     atmScreen = loadImage('assets/atm-screen-view.png');
     myFont = loadFont('assets/PressStart2P-Regular.ttf');
     micIcon = loadImage('assets/mic-icon.png');
-    mouthIcon = loadImage('assets/mouth-icon.png');
+    cursorIcon = loadImage('assets/cursor.png');
     glow = loadImage('assets/glow.png');
     startSound = loadSound('assets/btnchime.mp3');
     selectSound = loadSound('assets/hint.mp3');
@@ -71,20 +74,23 @@ function setup() {
     
     video = createCapture(VIDEO);
     video.hide();
-    let options = {
-        flipHorizontal: true
-    }
-    poseNet = ml5.poseNet(video, options, modelReady);
+//    let options = {
+//        flipHorizontal: true
+//    }
+    poseNet = ml5.poseNet(video, modelReady);
     poseNet.on('pose', (results) => {
         poses = results;
     });
     
-    startSpeech();
+    //speech recognition
+    speechRec.start();
+    speechRec.onResult = gotSpeech;
+    speechRec.onEnd = restartSpeech;
     
     let yourInputHere = createP('What ATM hears: ');
     yourInputHere.position(20, 520);
     textP = createP('Your speech input will show up here.');
-    textP.position(150, 520)
+    textP.position(150, 520);
     
     //intial variables
     fade = 0;
@@ -95,11 +101,9 @@ function setup() {
 //    currentOptions = getCashAmt;
 }
 
-function startSpeech() {
-    speechRec = new p5.SpeechRec('en-US', gotSpeech);
-    let continuous = true;
-    let interim = false;
-    speechRec.start(continuous, interim);
+function restartSpeech() {
+    console.log('end');
+    speechRec.start();
 }
 
 function gotSpeech() {
@@ -110,11 +114,12 @@ function gotSpeech() {
     
     //detect start command
     if (ATMstart === false) {
-        if (speechInput === 'interact') {
+        if (speechInput === 'go') {
             startSound.amp(0.3);
             startSound.play();
             btnClr = color(0, 150, 0);
             isTransitioning = true;
+            speechInput = '';
         }
     }
 }
@@ -128,11 +133,11 @@ function drawCursor() {
         //console.log(poses);
         let mouthPos = poses[0].pose.nose;
         //console.log(mouthPos);
-        cx = constrain(mouthPos.x, 100, 670);
-        cy = constrain(mouthPos.y + 50, 65, 390);
+        cx = constrain(mouthPos.x+50, 100, 670);
+        cy = constrain(mouthPos.y-100, 65, 390);
         noStroke();    
         fill(255, 150, 0, 126);
-        image(mouthIcon, cx, cy, r+10, r);
+        image(cursorIcon, cx, cy, r, r);
     }
 }
 
@@ -245,21 +250,38 @@ function showStreetCorner() {
     textSize(9);
     text('Uses webcam and voice input.', 60, 395, 280, 100);
     //text('Read out the text in the button to start.', 60, 385, 260, 100);
-    textSize(18);
-    text('Say-->', 80, 440, 260, 100)
+    textSize(14);
+    text('Say or click-->', 60, 440, 300, 100)
     
     //interact button
-    fill(btnClr);
+    if (mouseX > 280 && mouseX < 355 && mouseY > 425 && mouseY < 475) {
+        fill(0, 200, 0);
+        cursor(HAND)
+    } else {
+        fill(btnClr);
+        cursor(ARROW)
+    }
     stroke(255);
     strokeWeight(1);
-    rect(200, 425, 150, 50, 10);
+    rect(280, 425, 75, 50, 10);
     
     fill(255);
     noStroke();
     textSize(12);
     textAlign(LEFT, CENTER);
-    text('Interact', 225, 450);
+    text('Go', 305, 450);
     pop();
+}
+
+function mousePressed() {
+    if (ATMstart === false) {
+        if (mouseX > 280 && mouseX < 355 && mouseY > 425 && mouseY < 475) {
+            startSound.amp(0.3);
+            startSound.play();
+            btnClr = color(0, 150, 0);
+            isTransitioning = true;
+        }
+    }
 }
 
 function doFade() {
@@ -287,13 +309,63 @@ function showATMscreen() {
     strokeWeight(1)
     ellipse(width/2-15, 33, 10);
     
+    //animate cash output
+    cashPrinter();
+    
+    //draw screen
+    fill(0, 200, 255);
+    stroke(0);
+    strokeWeight(3);
+    rect(100, 75, 600, 350, 10);
+    noFill();
+    strokeWeight(2);
+    rect(90, 65, 620, 370, 10);
+    
+    //draw ATM face
+    noStroke();
+    fill(0, 255, 100);
+    rect(150, 90, 200, 130, 30);
+    
+    drawEmoji();
+    
+    //draw mic
+//    stroke(0, 255, 100);
+//    strokeWeight(2);
+//    line(275, 220, 275, 320);
+//    line(275, 320, 325, 370);
+//    line(325, 370, 450, 370);
+//    noStroke();
+//    strokeWeight(1);
+//    if (poses.length > 0) {
+//        let d = dist(cx, cy, 450-(r+10)/2, 370-r/2);
+//        if (d < r) {
+//            fill(255, 255, 0);
+//            stroke(0, 255, 100);
+//        } else {
+//            fill(0, 255, 100);
+//        }
+//    }
+//    ellipse(450, 370, 65);
+//    image(micIcon, 425, 345, 50, 50);
+//    noFill();
+//    ellipse(450, 370, 60);
+//    ellipse(450, 370, 72);
+//    ellipse(450, 370, 80);
+    
+    //speechBubble
+    fill(255);
+    noStroke();
+    rect(115, 230, 265, 180, 10);
+    triangle(140, 230, 150, 230, 160, 200);
+}
+
+function cashPrinter() {
     //cash slot
     fill(40);
     stroke(0);
     strokeWeight(3)
     rect(250, 445, 300, 25, 20)
     
-    //animate cash output
     if (printingCash) {
         //console.log('outputting cash...');
         if (cashOutput > 0) {
@@ -320,52 +392,6 @@ function showATMscreen() {
     fill(0);
     strokeWeight(3)
     rect(240, 440, 320, 18, 30, 30, 0, 0)
-    
-    //draw screen
-    fill(0, 200, 255);
-    stroke(0);
-    strokeWeight(3);
-    rect(100, 75, 600, 350, 10);
-    noFill();
-    strokeWeight(2);
-    rect(90, 65, 620, 370, 10);
-    
-    //draw ATM face
-    noStroke();
-    fill(0, 255, 100);
-    rect(150, 90, 200, 130, 30);
-    
-    drawEmoji();
-    
-    //draw mic
-    stroke(0, 255, 100);
-    strokeWeight(2);
-    line(275, 220, 275, 320);
-    line(275, 320, 325, 370);
-    line(325, 370, 450, 370);
-    noStroke();
-    strokeWeight(1);
-    if (poses.length > 0) {
-        let d = dist(cx, cy, 450-(r+10)/2, 370-r/2);
-        if (d < r) {
-            fill(255, 255, 0);
-            stroke(0, 255, 100);
-        } else {
-            fill(0, 255, 100);
-        }
-    }
-    ellipse(450, 370, 65);
-    image(micIcon, 425, 345, 50, 50);
-    noFill();
-    ellipse(450, 370, 60);
-    ellipse(450, 370, 72);
-    ellipse(450, 370, 80);
-    
-    //speechBubble
-    fill(255);
-    noStroke();
-    rect(115, 230, 265, 180, 10);
-    triangle(140, 230, 150, 230, 160, 200);
 }
 
 function drawEmoji() {
@@ -423,7 +449,7 @@ let faceScan = function() {
         setTimeout(cursorActivate, 5000);
 //        console.log('scanning...')
     } else {
-        ATMsays = 'Scan complete! Move your head to over over the mic. Read the exact text in a button to select.'
+        ATMsays = 'Scan complete! You can move the cursor with your head or say aloud the exact text in a button to select it.';
         image(checkMark, 490, 150, 100, 100);
         noStroke();
         let next = new UserSelection('Go', 575, 300, 100, 40, interact);
@@ -439,7 +465,7 @@ function cursorActivate() {
 function interact() {
     //console.log('loading next');
     asciEmoji = '^_^';
-    ATMsays = 'Welcome! Do you want to withdraw cash?'
+    ATMsays = 'Welcome! Do you want to withdraw cash?';
     currentOptions = wantCash;
 }
 
@@ -566,8 +592,9 @@ let inputNum = function() {
     if (isPin === true) {
         if (pin.length < 4) {
             pin.push('*');
+            speechInput = '';
         }
-        speechInput = '';
+        //speechInput = '';
     } else {
         if (cash.length < 8) {
             if (speechProxy === '0','1','2','3','4','5','6','7','8','9') {
@@ -609,23 +636,23 @@ let enterNum = function() {
 
 let cancelNum = function() {
     if (isPin === true) {
-        if (pin.length === 0) {
-            asciEmoji = '^_^';
-            ATMsays = 'Welcome! Do you want to withdraw cash?'
-            currentOptions = wantCash;
-        } else {
+//        if (pin.length === 0) {
+//            asciEmoji = '^_^';
+//            ATMsays = 'Welcome! Do you want to withdraw cash?'
+//            currentOptions = wantCash;
+//        } else {
             pin.length = 0;
             speechInput = '';
-        }
+//        }
     } else {
-        if (cash.length === 0) {
-            asciEmoji = '^_^';
-            ATMsays = 'What can I do for you?';
-            currentOptions = userOpts;
-        } else {
+//        if (cash.length === 0) {
+//            asciEmoji = '^_^';
+//            ATMsays = 'What can I do for you?';
+//            currentOptions = userOpts;
+//        } else {
             cash.length = 0;
             speechInput = '';
-        }
+//        }
     }
 }
 
@@ -709,12 +736,12 @@ class UserSelection {
         this.wd = wd;
         this.ht = ht;
         this.onSelect = onSelect;
-        this.isSelected = false;
+        this.onHover = false;
     }
     
     display() {
         this.detectSpeechInput();
-        rect(this.xPos, this.yPos, this.wd, this.ht, 5);
+        this.hoverSelect();
         fill(255);
         noStroke();
         textSize(11);
@@ -734,5 +761,29 @@ class UserSelection {
         } else {
             fill(0, 0, 255);
         }
+    }
+    
+    hoverSelect() {
+       if (poses) {
+            if (cx > this.xPos && cx < this.xPos + this.wd && cy > this.yPos && cy < this.yPos + this.ht) {
+                noFill();
+                stroke(255);
+                fill(255, 100, 0);
+                rect(this.xPos, this.yPos, this.wd, this.ht, 5);
+                if (speechInput === 'click' || speechInput === 'select') {
+                    selectSound.amp(0.3);
+                    selectSound.play();
+                    setTimeout(this.onSelect, 300);
+                    speechInput = '';
+                    fill(0, 255, 0);
+                } else {
+                    fill(0, 0, 255);
+                }
+            } else {
+                noStroke();
+                fill(0, 0, 255);
+                rect(this.xPos, this.yPos, this.wd, this.ht, 5);
+            }
+        } 
     }
 }
