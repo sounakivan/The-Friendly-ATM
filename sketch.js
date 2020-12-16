@@ -27,6 +27,8 @@ let myFont;
 let glow;
 let selectSound;
 let checkMark;
+let cnvHeight;
+let cnvWidth;
 
 //Atm screen
 let ATMsays;
@@ -69,7 +71,21 @@ function preload() {
 }
 
 function setup() {
-    createCanvas(800, 500);
+    let yourInputHere = createP('What ATM hears: ');
+//    yourInputHere.position(20, 10);
+    textP = createP('Your speech input will show up here.');
+//    textP.position(150, 10);
+    
+    cnvWidth = windowWidth;
+    cnvHeight = 5 / 8 * windowWidth;
+    if (windowWidth >= 800) {
+        cnvWidth = windowWidth;
+        cnvHeight = 5 / 8 * windowWidth;
+    } else {
+        cnvWidth = 800;
+        cnvHeight = 500;
+    }
+    createCanvas(cnvWidth, cnvHeight);
     pixelDensity(1);
     
     video = createCapture(VIDEO);
@@ -87,11 +103,6 @@ function setup() {
     speechRec.onResult = gotSpeech;
     speechRec.onEnd = restartSpeech;
     
-    let yourInputHere = createP('What ATM hears: ');
-    yourInputHere.position(20, 520);
-    textP = createP('Your speech input will show up here.');
-    textP.position(150, 520);
-    
     //intial variables
     fade = 0;
     btnClr = color(0, 0, 255);
@@ -99,6 +110,20 @@ function setup() {
     //for testing
 //    ATMsays = 'How much cash you want?'
 //    currentOptions = getCashAmt;
+}
+
+function windowResized() {
+    cnvWidth = windowWidth;
+    cnvHeight = 5 / 8 * windowWidth;
+    if (windowWidth >= 800) {
+        cnvWidth = windowWidth;
+        cnvHeight = 5 / 8 * windowWidth;
+    } else {
+        cnvWidth = 800;
+        cnvHeight = 500;
+    }
+    resizeCanvas(cnvWidth, cnvHeight);
+    
 }
 
 function restartSpeech() {
@@ -149,7 +174,6 @@ function draw() {
     } else {
         textP.html(speechProxy);
     }
-    
 
     //scene change
     if (ATMstart === false) {
@@ -175,7 +199,7 @@ function draw() {
         textAlign(LEFT, CENTER);
         
         for (let n = 0; n < pin.length; n++) {
-            text(pin[n], 440 + 60*n, 120);
+            text(pin[n], width/2+40 + 60*n, 120);
         }
     }
     
@@ -190,7 +214,7 @@ function draw() {
             push();
             translate(-20*cash.length, 0);
             fill(0);
-            text(cash[n], 660 + 20*n, 120);
+            text(cash[n], width/2+260 + 20*n, 120);
             pop();
         }
     }
@@ -200,7 +224,7 @@ function draw() {
         noStroke();
         textSize(18);
         textAlign(LEFT, CENTER);
-        text('MAX', 440, 120);
+        text('MAX', width/2+40, 120);
     }
 }
 
@@ -250,8 +274,9 @@ function showStreetCorner() {
     textSize(9);
     text('Uses webcam and voice input.', 60, 395, 280, 100);
     //text('Read out the text in the button to start.', 60, 385, 260, 100);
-    textSize(14);
-    text('Say or click-->', 60, 440, 300, 100)
+    fill(0, 255, 0);
+    textSize(12);
+    text('To begin, say GO or click -->', 60, 435, 220, 100)
     
     //interact button
     if (mouseX > 280 && mouseX < 355 && mouseY > 425 && mouseY < 475) {
@@ -304,10 +329,14 @@ function showATMscreen() {
     image(atmScreen, 0, 0, width, height);
     
     //rec
+    fill(0);
+    ellipse(width/2, 33, 50);
+    fill(120);
+    ellipse(width/2, 33, 20);
     fill(255, 0, 0);
     stroke(0);
     strokeWeight(1)
-    ellipse(width/2-15, 33, 10);
+    ellipse(width/2, 50, 10);
     
     //animate cash output
     cashPrinter();
@@ -316,15 +345,15 @@ function showATMscreen() {
     fill(0, 200, 255);
     stroke(0);
     strokeWeight(3);
-    rect(100, 75, 600, 350, 10);
+    rect(width/2 - 300, 75, 600, 350, 10);
     noFill();
     strokeWeight(2);
-    rect(90, 65, 620, 370, 10);
+    rect(width/2 - 310, 65, 620, 370, 10);
     
     //draw ATM face
     noStroke();
     fill(0, 255, 100);
-    rect(150, 90, 200, 130, 30);
+    rect(width/2 - 250, 90, 200, 130, 30);
     
     drawEmoji();
     
@@ -355,8 +384,8 @@ function showATMscreen() {
     //speechBubble
     fill(255);
     noStroke();
-    rect(115, 230, 265, 180, 10);
-    triangle(140, 230, 150, 230, 160, 200);
+    rect(width/2 - 285, 230, 265, 180, 10);
+    triangle(width/2 - 260, 230, width/2 - 250, 230, width/2 - 240, 200);
 }
 
 function cashPrinter() {
@@ -364,20 +393,20 @@ function cashPrinter() {
     fill(40);
     stroke(0);
     strokeWeight(3)
-    rect(250, 445, 300, 25, 20)
+    rect(width/2 - 150, 445, 300, 25, 20)
     
     if (printingCash) {
         //console.log('outputting cash...');
         if (cashOutput > 0) {
             fill(0, 101, 68)
             strokeWeight(2);
-            rect(350, printY, 100, 150);
+            rect(width/2-50, printY, 100, 150);
             fill(0, 101, 68)
             strokeWeight(1);
-            rect(360, printY+15, 80, 120);
+            rect(width/2 - 40, printY+15, 80, 120);
             fill(0, 255, 0);
             textSize(50);
-            text('$', 380, printY+75);
+            text('$', width/2 - 20, printY+75);
             printY += 3;
             console.log(cashOutput)
             if (printY >= height) {
@@ -388,10 +417,10 @@ function cashPrinter() {
     }
     fill(145, 188, 230);
     noStroke();
-    rect(200,427,400,15);
+    rect(width/2 - 200,427,400,15);
     fill(0);
     strokeWeight(3)
-    rect(240, 440, 320, 18, 30, 30, 0, 0)
+    rect(width/2 - 160, 440, 320, 18, 30, 30, 0, 0)
 }
 
 function drawEmoji() {
@@ -403,15 +432,15 @@ function drawEmoji() {
     textFont(myFont);
     textAlign(LEFT, CENTER);
     textSize(45);
-    text(asciEmoji, 200, emojiY);
+    text(asciEmoji, width/2 - 200, emojiY);
 }
 
 function initializeATM() {
-    let thisScreen = new ScreenState(ATMsays, 130, 250, 260, 180, currentOptions);
+    let thisScreen = new ScreenState(ATMsays, width/2 - 270, 250, 260, 180, currentOptions);
     thisScreen.display();
     
     if (cActive) {
-        let bye = new UserSelection('Goodbye', 575, 350, 100, 40, goBackToStreet);
+        let bye = new UserSelection('Goodbye', width/2 + 175, 350, 100, 40, goBackToStreet);
         bye.display();
     }
 }
@@ -425,9 +454,9 @@ let goBackToStreet = function() {
 
 let faceScan = function() {
     fill(0);
-    rect(400, 90, 270, 195, 10);
+    rect(width/2, 90, 270, 195, 10);
     tint(200, 100, 255, 255);
-    image(video, 410, 100, 250, 175);
+    image(video, width/2 + 10, 100, 250, 175);
     noTint();
     
     if (!cActive) {
@@ -436,7 +465,7 @@ let faceScan = function() {
         scanY = map(sin(scanner), -1, 1, 100, 275);
         stroke(0, 255, 255);
         strokeWeight(2);
-        line(410, scanY, 660, scanY);
+        line(width/2 +10, scanY, width/2 + 250, scanY);
         //timer
         noStroke();
         if (millis() - startCount >= 1000) {
@@ -445,14 +474,21 @@ let faceScan = function() {
         }
         textSize(50);
         fill(255, 255, 100);
-        text(count, 515, 170);
+        text(count, width/2 + 115, 170);
         setTimeout(cursorActivate, 5000);
 //        console.log('scanning...')
     } else {
-        ATMsays = 'Scan complete! You can move the cursor with your head or say aloud the exact text in a button to select it.';
+        //instructions
+        textSize(10);
+        fill(0,0,255);
+        text('How to select:', width/2 -270, 250, 175, 100);
+        fill(0);
+        text('1. Read out the exact text of the button, OR', width/2 -270, 275, 250, 200);
+        text('2. Move the cursor with your head to hover over your choice and say SELECT or CLICK.', width/2 -270, 320, 250, 200)
+        ATMsays = '';
         image(checkMark, 490, 150, 100, 100);
         noStroke();
-        let next = new UserSelection('Go', 575, 300, 100, 40, interact);
+        let next = new UserSelection('Go', width/2 + 175, 300, 100, 40, interact);
         next.display();
     }
 }
@@ -471,9 +507,9 @@ function interact() {
 
 let wantCash = function() {
     //generate selections
-    let optYes = new UserSelection('Yes', 400, 110, 275, 60, enterPin);
-    let optNo = new UserSelection('No', 400, 185, 275, 60, whyNot);
-    let optMaybe = new UserSelection('Maybe', 400, 260, 275, 60, whyNot);
+    let optYes = new UserSelection('Yes', width/2, 110, 275, 60, enterPin);
+    let optNo = new UserSelection('No', width/2, 185, 275, 60, whyNot);
+    let optMaybe = new UserSelection('Maybe', width/2, 260, 275, 60, whyNot);
     
     optYes.display();
     optNo.display();
@@ -487,9 +523,9 @@ let whyNot = function() {
 }
 
 let whyNotOpts = function() {
-    let optSatisfy = new UserSelection('Because money cannot satisfy me', 400, 110, 275, 60, wantAdvice);
-    let optTalk = new UserSelection('Just wanted to talk', 400, 185, 275, 60, letsTalk);
-    let optCash = new UserSelection('Nevermind give me cash', 400, 260, 275, 60, enterPin);
+    let optSatisfy = new UserSelection('Because money cannot satisfy me', width/2, 110, 275, 60, wantAdvice);
+    let optTalk = new UserSelection('Just wanted to talk', width/2, 185, 275, 60, letsTalk);
+    let optCash = new UserSelection('Nevermind give me cash', width/2, 260, 275, 60, enterPin);
     optSatisfy.display();
     optTalk.display();
     optCash.display();
@@ -502,8 +538,8 @@ let wantAdvice = function() {
 }
 
 let toAdviceOrNotToAdvice = function() {
-    let optRefuse = new UserSelection('No just give me cash', 400, 110, 275, 60, enterPin);
-    let optAccept = new UserSelection('Okay give me advice', 400, 185, 275, 60, getAdvice);
+    let optRefuse = new UserSelection('No just give me cash', width/2, 110, 275, 60, enterPin);
+    let optAccept = new UserSelection('Okay give me advice', width/2, 185, 275, 60, getAdvice);
     optRefuse.display();
     optAccept.display();
 }
@@ -515,8 +551,8 @@ let letsTalk = function() {
 }
 
 let letsTalkOpts = function() {
-    let optAdvice = new UserSelection('Give me cash', 400, 110, 275, 60, enterPin);
-    let optTalk = new UserSelection('Give me advice', 400, 185, 275, 60, getAdvice);
+    let optAdvice = new UserSelection('Give me cash', width/2, 110, 275, 60, enterPin);
+    let optTalk = new UserSelection('Give me advice', width/2, 185, 275, 60, getAdvice);
     optAdvice.display();
     optTalk.display();
 }
@@ -537,8 +573,8 @@ function printAdvice(advice) {
 }
 
 let thatHelps = function() {
-    let optHelps = new UserSelection('Okay give me cash', 400, 110, 275, 60, enterPin);
-    let optMore = new UserSelection('Give me more advice', 400, 185, 275, 60, getAdvice);
+    let optHelps = new UserSelection('Okay give me cash', width/2, 110, 275, 60, enterPin);
+    let optMore = new UserSelection('Give me more advice', width/2, 185, 275, 60, getAdvice);
     optHelps.display();
     optMore.display();
 }
@@ -555,29 +591,29 @@ let numPad = function() {
     fill(255);
     stroke(0, 0, 255);
     strokeWeight(2);
-    rect(420, 90, 250, 60, 10);
+    rect(width/2+20, 90, 250, 60, 10);
     
     if (isPin === true) {
         fill(0);
         noStroke();
         textSize(30);
         textAlign(LEFT, CENTER);
-        text('_ _ _ _', 440, 125);
+        text('_ _ _ _', width/2+40, 125);
     }
     
     //numbers
     for (let r = 0; r < 3; r++) {
         for (let i = 0; i < 3; i++) {
             let numCount = (i + 1) + (3 * r);
-            let num = new UserSelection('' + numCount, 510 + 55*i, 160 + 55*r, 50, 50, inputNum);
+            let num = new UserSelection('' + numCount, width/2 + 110 + 55*i, 160 + 55*r, 50, 50, inputNum);
             num.display();
         }
     }
-    let num0 = new UserSelection('0', 455, 160, 50, 50, inputNum);
+    let num0 = new UserSelection('0', width/2 +55, 160, 50, 50, inputNum);
     num0.display();
-    let enter = new UserSelection('Go', 425, 215, 80, 50, enterNum);
+    let enter = new UserSelection('Go', width/2+25, 215, 80, 50, enterNum);
     enter.display();
-    let cancel = new UserSelection('Cancel', 415, 270, 90, 50, cancelNum);
+    let cancel = new UserSelection('Cancel', width/2+15, 270, 90, 50, cancelNum);
     cancel.display();
     
     //cash printer conditions
@@ -658,8 +694,8 @@ let cancelNum = function() {
 
 let userOpts = function() {
     printingCash = false;
-    let optGiveCash = new UserSelection('Give me cash', 400, 110, 275, 60, getCashAmt);
-    let optMyBalance = new UserSelection('How much cash do I have', 400, 185, 275, 60, notEnough);
+    let optGiveCash = new UserSelection('Give me cash', width/2, 110, 275, 60, getCashAmt);
+    let optMyBalance = new UserSelection('How much cash do I have', width/2, 185, 275, 60, notEnough);
     //let optGiveAdvice = new UserSelection('Give me advice', 400, 260, 275, 60, getAdvice);
     optGiveCash.display();
     optMyBalance.display();
@@ -674,8 +710,8 @@ let notEnough = function() {
 }
 
 let loveAndHappiness = function() {
-    let optOkCash = new UserSelection('Whatever just give me cash', 400, 110, 275, 60, getCashAmt);
-    let optFindLove = new UserSelection('Will I ever find love and happiness', 400, 185, 275, 60, letItGo);
+    let optOkCash = new UserSelection('Whatever just give me cash', width/2, 110, 275, 60, getCashAmt);
+    let optFindLove = new UserSelection('Will I ever find love and happiness', width/2, 185, 275, 60, letItGo);
     optOkCash.display();
     optFindLove.display();
 }
@@ -687,8 +723,8 @@ let letItGo = function() {
 }
 
 let thanks = function() {
-    let optThanks = new UserSelection('Thank you ATM I feel better now', 400, 110, 275, 60, noProblem);
-    let optReady = new UserSelection('I am ready to let it go now give me cash', 400, 185, 275, 60, getCashAmt);
+    let optThanks = new UserSelection('Thank you ATM I feel better now', width/2, 110, 275, 60, noProblem);
+    let optReady = new UserSelection('I am ready to let it go now give me cash', width/2, 185, 275, 60, getCashAmt);
     optThanks.display();
     optReady.display();
 }
