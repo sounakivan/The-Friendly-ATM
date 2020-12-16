@@ -296,6 +296,12 @@ function showStreetCorner() {
     textAlign(LEFT, CENTER);
     text('Go', 305, 450);
     pop();
+    
+    fill(0);
+    rect(width-100, 20, 100, 60);
+    fill(255);
+    textSize(14);
+    text('Resize window for best fit', width-90, 25, 80, 90);
 }
 
 function mousePressed() {
@@ -539,7 +545,7 @@ let wantAdvice = function() {
 
 let toAdviceOrNotToAdvice = function() {
     let optRefuse = new UserSelection('No just give me cash', width/2, 110, 275, 60, enterPin);
-    let optAccept = new UserSelection('Okay give me advice', width/2, 185, 275, 60, getAdvice);
+    let optAccept = new UserSelection('Ok give me advice', width/2, 185, 275, 60, getAdvice);
     optRefuse.display();
     optAccept.display();
 }
@@ -573,7 +579,7 @@ function printAdvice(advice) {
 }
 
 let thatHelps = function() {
-    let optHelps = new UserSelection('Okay give me cash', width/2, 110, 275, 60, enterPin);
+    let optHelps = new UserSelection('Ok give me cash', width/2, 110, 275, 60, enterPin);
     let optMore = new UserSelection('Give me more advice', width/2, 185, 275, 60, getAdvice);
     optHelps.display();
     optMore.display();
