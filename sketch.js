@@ -76,11 +76,11 @@ function setup() {
     textP = createP('Your speech input will show up here.');
 //    textP.position(150, 10);
     
-    cnvWidth = windowWidth;
-    cnvHeight = 5 / 8 * windowWidth;
-    if (windowWidth >= 800) {
-        cnvWidth = windowWidth;
-        cnvHeight = 5 / 8 * windowWidth;
+//    cnvWidth = windowWidth;
+//    cnvHeight = 5 / 8 * windowWidth/2;
+    if (windowWidth >= 1600) {
+        cnvWidth = windowWidth/2;
+        cnvHeight = 5 / 8 * windowWidth/2;
     } else {
         cnvWidth = 800;
         cnvHeight = 500;
@@ -113,11 +113,11 @@ function setup() {
 }
 
 function windowResized() {
-    cnvWidth = windowWidth;
-    cnvHeight = 5 / 8 * windowWidth;
-    if (windowWidth >= 800) {
-        cnvWidth = windowWidth;
-        cnvHeight = 5 / 8 * windowWidth;
+//    cnvWidth = windowWidth;
+//    cnvHeight = 5 / 8 * windowWidth;
+    if (windowWidth >= 1600) {
+        cnvWidth = windowWidth/2;
+        cnvHeight = 5 / 8 * windowWidth/2;
     } else {
         cnvWidth = 800;
         cnvHeight = 500;
@@ -297,11 +297,11 @@ function showStreetCorner() {
     text('Go', 305, 450);
     pop();
     
-    fill(0);
-    rect(width-100, 20, 100, 60);
-    fill(255);
-    textSize(14);
-    text('Resize window for best fit', width-90, 25, 80, 90);
+//    fill(0);
+//    rect(width-100, 20, 100, 60);
+//    fill(255);
+//    textSize(14);
+//    text('Resize window for best fit', width-90, 25, 80, 90);
 }
 
 function mousePressed() {
